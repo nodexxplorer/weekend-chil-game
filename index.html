@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Node tap · Blue & Purple</title>
+    <title>The Node tap · Global Leaderboard</title>
 
     <!-- Meta tags -->
     <meta name="description" content="this is made in remembrance of the legendary notcoin and tapswap.">
@@ -86,7 +86,7 @@
                     maxlength="20"
                     class="w-full px-4 py-3 text-lg border-2 border-indigo-400 rounded-lg focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200"
                 />
-                <p class="text-xs text-gray-500 mt-2">This will be used to track your score on the leaderboard!</p>
+                <p class="text-xs text-gray-500 mt-2">This will be used to track your score on the global leaderboard!</p>
             </div>
             <button id="nickname-submit" class="primary-button w-full py-4 text-xl font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white uppercase tracking-wider">
                 Continue to Game
@@ -145,15 +145,14 @@
 
                 <!-- Leaderboard toggle button -->
                 <button id="toggle-leaderboard" class="leaderboard-button w-full py-3 text-lg font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
-                    🏆 Show Today's Leaderboard
+                    🏆 Show Global Leaderboard
                 </button>
 
                 <!-- Leaderboard panel (hidden by default) -->
                 <div id="leaderboard-panel" class="hidden bg-indigo-50 p-4 rounded-xl border border-indigo-200 space-y-2 max-h-60 overflow-y-auto">
-                    <h3 class="font-bold text-indigo-900 text-center">Today's Top Players</h3>
+                    <h3 class="font-bold text-indigo-900 text-center">Today's Top Players (Global)</h3>
                     <div id="leaderboard-entries" class="text-sm">
-                        <!-- Entries go here -->
-                        <p class="text-gray-500 italic">No scores yet today.</p>
+                        <p class="text-gray-500 italic">Loading...</p>
                     </div>
                 </div>
             </div>
@@ -169,6 +168,9 @@
 
     <script type="module">
         // ===== CONFIGURATION =====
+        // 🔁 Replace this with your Google Apps Script Web App URL
+        const GOOGLE_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+
         const GAME_DURATION = 10;
         let playerNickname = '';
         let score = 0;
@@ -196,58 +198,95 @@
         const leaderboardPanel = document.getElementById('leaderboard-panel');
         const leaderboardEntries = document.getElementById('leaderboard-entries');
 
-        // ===== LEADERBOARD FUNCTIONS (localStorage, daily) =====
+        // ===== GOOGLE SHEETS INTEGRATION =====
+
+        // Save score to Google Sheets
+        async function saveScoreToSheet(nickname, scoreValue) {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === '1pw4eYOjknlBoyW2HJGwF1ifRKU5L0HIpOBhpxQIrJInBDzBHoivt8rFE') {
+                console.warn('Google Script URL not set. Score not saved.');
+                return false;
+            }
+            try {
+                const timestamp = new Date().toISOString();
+                // Using no-cors to avoid CORS issues, but this means we can't read response.
+                // For better reliability, you might want to set up the Apps Script to return JSONP.
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nickname: nickname,
+                        score: scoreValue,
+                        timestamp: timestamp
+                    })
+                });
+                console.log('Score saved successfully');
+                return true;
+            } catch (error) {
+                console.error('Error saving score:', error);
+                return false;
+            }
+        }
+
+        // Fetch today's leaderboard from Google Sheets
+        async function fetchLeaderboardFromSheet() {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                leaderboardEntries.innerHTML = '<p class="text-gray-500 italic">Set up Google Script URL</p>';
+                return [];
+            }
+            try {
+                // Using a GET request with a cache-buster
+                const url = `${GOOGLE_SCRIPT_URL}?action=getToday&t=${Date.now()}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                // Expect data to be an array of { nickname, score, date } sorted descending
+                return data || [];
+            } catch (error) {
+                console.error('Error fetching leaderboard:', error);
+                leaderboardEntries.innerHTML = '<p class="text-gray-500 italic">Failed to load. Using local cache.</p>';
+                // Fallback to localStorage if network fails
+                return getLocalTodayScores();
+            }
+        }
+
+        // Local fallback (same as before)
+        function getLocalTodayScores() {
+            const stored = localStorage.getItem('nodeHeadScores');
+            const all = stored ? JSON.parse(stored) : [];
+            const today = getTodayKey();
+            return all.filter(entry => entry.date === today).sort((a, b) => b.score - a.score);
+        }
 
         function getTodayKey() {
             const d = new Date();
             return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         }
 
-        function loadScores() {
-            const stored = localStorage.getItem('nodeHeadScores');
-            return stored ? JSON.parse(stored) : [];
-        }
-
-        function saveScores(scores) {
-            localStorage.setItem('nodeHeadScores', JSON.stringify(scores));
-        }
-
-        function getTodayScores() {
-            const all = loadScores();
+        // Add to local storage as backup (optional)
+        function addScoreToLocalStorage(nickname, scoreValue) {
+            const all = JSON.parse(localStorage.getItem('nodeHeadScores') || '[]');
             const today = getTodayKey();
-            return all
-                .filter(entry => entry.date === today)
-                .sort((a, b) => b.score - a.score);
-        }
-
-        function addScoreToLeaderboard(nickname, scoreValue) {
-            if (!nickname || scoreValue === undefined) return;
-            const all = loadScores();
-            const today = getTodayKey();
-            all.push({
-                nickname,
-                score: scoreValue,
-                date: today,
-                timestamp: Date.now()
-            });
-            // Keep only last 100 entries to avoid storage bloat
+            all.push({ nickname, score: scoreValue, date: today, timestamp: Date.now() });
             if (all.length > 100) all.shift();
-            saveScores(all);
+            localStorage.setItem('nodeHeadScores', JSON.stringify(all));
         }
 
-        function renderLeaderboard() {
-            const todayScores = getTodayScores();
-            if (todayScores.length === 0) {
+        // Render leaderboard with data from server
+        async function renderLeaderboard() {
+            leaderboardEntries.innerHTML = '<p class="text-gray-500 italic">Loading...</p>';
+            const scores = await fetchLeaderboardFromSheet();
+            if (scores.length === 0) {
                 leaderboardEntries.innerHTML = '<p class="text-gray-500 italic">No scores yet today.</p>';
                 return;
             }
             let html = '<ol class="list-decimal list-inside space-y-1">';
-            todayScores.slice(0, 10).forEach((entry, index) => {
+            scores.slice(0, 10).forEach((entry, index) => {
                 html += `<li class="${index === 0 ? 'font-bold text-indigo-800' : ''}">${entry.nickname} — ${entry.score}</li>`;
             });
             html += '</ol>';
-            if (todayScores.length > 10) {
-                html += `<p class="text-xs text-gray-500 mt-1">and ${todayScores.length - 10} more...</p>`;
+            if (scores.length > 10) {
+                html += `<p class="text-xs text-gray-500 mt-1">and ${scores.length - 10} more...</p>`;
             }
             leaderboardEntries.innerHTML = html;
         }
@@ -286,9 +325,9 @@
             startOverlay.classList.add('opacity-0', 'pointer-events-none');
             startOverlay.classList.remove('z-20');
             shareSection.classList.add('hidden');
-            // Optionally hide leaderboard when game starts (optional)
+            // Hide leaderboard when game starts
             leaderboardPanel.classList.add('hidden');
-            toggleLeaderboardBtn.textContent = '🏆 Show Today\'s Leaderboard';
+            toggleLeaderboardBtn.textContent = '🏆 Show Global Leaderboard';
             startButton.textContent = 'Game In Progress...';
             startButton.disabled = true;
 
@@ -297,7 +336,7 @@
             nokTarget.addEventListener('touchstart', handleTap);
         }
 
-        function endGame() {
+        async function endGame() {
             gameState = 'FINISHED';
             nokTarget.removeEventListener('click', handleTap);
             nokTarget.removeEventListener('touchstart', handleTap);
@@ -305,9 +344,15 @@
             clearInterval(gameInterval);
             timerDisplay.textContent = '0.0';
 
-            // Save score to leaderboard
-            addScoreToLeaderboard(playerNickname, score);
-            renderLeaderboard(); // update if panel is open
+            // Save to Google Sheets (fire and forget)
+            saveScoreToSheet(playerNickname, score);
+            // Also save locally as backup
+            addScoreToLocalStorage(playerNickname, score);
+
+            // If leaderboard panel is open, refresh it
+            if (!leaderboardPanel.classList.contains('hidden')) {
+                await renderLeaderboard();
+            }
 
             startButton.textContent = 'Play Again';
             startButton.disabled = false;
@@ -352,7 +397,8 @@
             nicknameScreen.classList.add('hidden');
             gameScreen.classList.remove('hidden');
             playerNicknameDisplay.textContent = playerNickname;
-            renderLeaderboard(); // show any existing scores
+            // Optionally pre-load leaderboard in background
+            renderLeaderboard(); // will show loading and then update when done
         }
 
         function showNicknameScreen() {
@@ -392,14 +438,14 @@
             showNicknameScreen();
         });
 
-        toggleLeaderboardBtn.addEventListener('click', () => {
+        toggleLeaderboardBtn.addEventListener('click', async () => {
             if (leaderboardPanel.classList.contains('hidden')) {
-                renderLeaderboard(); // refresh before showing
+                await renderLeaderboard();
                 leaderboardPanel.classList.remove('hidden');
                 toggleLeaderboardBtn.textContent = '🏆 Hide Leaderboard';
             } else {
                 leaderboardPanel.classList.add('hidden');
-                toggleLeaderboardBtn.textContent = '🏆 Show Today\'s Leaderboard';
+                toggleLeaderboardBtn.textContent = '🏆 Show Global Leaderboard';
             }
         });
 
