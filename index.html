@@ -3,80 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Node tap</title>
+    <title>The Node tap · Blue & Purple</title>
 
-    <!-- Meta tags for social sharing (Open Graph & Twitter Cards) -->
+    <!-- Meta tags -->
     <meta name="description" content="this is made in remembrance of the legendary notcoin and tapswap.">
-
-    <!-- Open Graph (Facebook, LinkedIn) -->
     <meta property="og:title" content="The Node head Hunter Game">
-    <meta property="og:description" content="this is made in remembrance of the legendary notcoin and tapswap ">
+    <meta property="og:description" content="this is made in remembrance of the legendary notcoin and tapswap">
     <meta property="og:image" content="file_00000000bd0461f5a6c90e9429ae20f6.png">
-    <meta property="og:type" content="game"> 
+    <meta property="og:type" content="game">
 
-   
-
-    <!-- Load Tailwind CSS -->
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom font and basic setup */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #fef3c7; /* Light Gold Background */
+            background-color: #e0e7ff; /* indigo-100 */
         }
         .game-container {
-            max-width: 420px; /* Mobile-friendly width */
+            max-width: 420px;
             margin: 0 auto;
         }
-        /* Custom Nok Head styling (applies to the new image) */
         .nok-head {
             cursor: pointer;
             transition: transform 0.05s ease-out;
             user-select: none;
-            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+            -webkit-tap-highlight-color: transparent;
         }
         .nok-head:active {
             transform: scale(0.95);
         }
-        /* Style for the button (optional, supplementing Tailwind) */
+        /* Custom button style – now with indigo shadow */
         .primary-button {
             transition: all 0.2s;
-            box-shadow: 0 4px #92400e; /* Shadow effect */
+            box-shadow: 0 4px #3730a3; /* indigo-800 */
         }
         .primary-button:active {
             transform: translateY(2px);
-            box-shadow: 0 2px #92400e;
+            box-shadow: 0 2px #3730a3;
         }
-        /* Fade in/out animations */
-        .fade-enter {
-            opacity: 0;
-            transform: translateY(-10px);
+        /* Share button gets a purple shadow */
+        .share-button {
+            transition: all 0.2s;
+            box-shadow: 0 4px #6b21a5; /* purple-800 */
         }
-        .fade-enter-active {
-            opacity: 1;
-            transform: translateY(0);
-            transition: opacity 0.3s, transform 0.3s;
+        .share-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px #6b21a5;
         }
-        .fade-exit {
-            opacity: 1;
+        /* Pulse animation for final score */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); color: #4f46e5; } /* indigo-600 */
+            100% { transform: scale(1); }
         }
-        .fade-exit-active {
-            opacity: 0;
-            transition: opacity 0.3s;
+        .pulse-score {
+            animation: pulse 0.5s ease-in-out 2;
         }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
-    <div class="game-container bg-white p-6 rounded-2xl shadow-2xl border-b-8 border-yellow-800/50">
+    <div class="game-container bg-white p-6 rounded-2xl shadow-2xl border-b-8 border-indigo-800/50">
         <header class="text-center mb-6">
-            <h1 class="text-3xl font-extrabold text-yellow-800">The Node Head</h1>
-            <p class="text-sm text-yellow-600 mt-1">Tap the Node Head as fast as you can in 10 seconds!</p>
+            <h1 class="text-3xl font-extrabold text-indigo-800">The Node Head</h1>
+            <p class="text-sm text-indigo-600 mt-1">Tap the Node Head as fast as you can in 10 seconds!</p>
         </header>
 
         <!-- Nickname Entry Screen -->
         <div id="nickname-screen" class="space-y-4">
-            <div class="bg-yellow-50 p-6 rounded-xl border-2 border-yellow-300">
-                <label for="nickname-input" class="block text-lg font-bold text-yellow-900 mb-2">
+            <div class="bg-indigo-50 p-6 rounded-xl border-2 border-indigo-300">
+                <label for="nickname-input" class="block text-lg font-bold text-indigo-900 mb-2">
                     Enter Your Nickname
                 </label>
                 <input 
@@ -84,89 +79,77 @@
                     id="nickname-input" 
                     placeholder="e.g., CodeNinja, TechGuru"
                     maxlength="20"
-                    class="w-full px-4 py-3 text-lg border-2 border-yellow-400 rounded-lg focus:outline-none focus:border-yellow-600 focus:ring-2 focus:ring-yellow-200"
+                    class="w-full px-4 py-3 text-lg border-2 border-indigo-400 rounded-lg focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200"
                 />
                 <p class="text-xs text-gray-500 mt-2">This will be used to track your score on the leaderboard!</p>
             </div>
-            <button id="nickname-submit" class="primary-button w-full py-4 text-xl font-bold rounded-xl bg-yellow-600 hover:bg-yellow-700 text-white uppercase tracking-wider">
+            <button id="nickname-submit" class="primary-button w-full py-4 text-xl font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white uppercase tracking-wider">
                 Continue to Game
             </button>
         </div>
 
-        <!-- Game Screen (initially hidden) -->
+        <!-- Game Screen -->
         <div id="game-screen" class="hidden">
-            <!-- Player Info Display -->
-            <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200 mb-4">
-                <p class="text-sm text-gray-600">Playing as: <span id="player-nickname" class="font-bold text-yellow-900"></span></p>
+            <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-200 mb-4">
+                <p class="text-sm text-gray-600">Playing as: <span id="player-nickname" class="font-bold text-indigo-900"></span></p>
             </div>
 
-            <!-- Game Statistics -->
-            <div class="flex justify-between text-center mb-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+            <div class="flex justify-between text-center mb-6 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
                 <div>
                     <p class="text-sm font-semibold text-gray-500">Score</p>
-                    <p id="score-display" class="text-4xl font-black text-yellow-900">0</p>
+                    <p id="score-display" class="text-4xl font-black text-indigo-900">0</p>
                 </div>
                 <div>
                     <p class="text-sm font-semibold text-gray-500">Time Left</p>
-                    <p id="timer-display" class="text-4xl font-black text-red-600">10.0</p>
+                    <p id="timer-display" class="text-4xl font-black text-purple-600">10.0</p>
                 </div>
             </div>
 
-            <!-- Node Head Target -->
             <div id="game-area" class="relative flex justify-center items-center h-48 bg-gray-100 rounded-xl mb-6">
-                <!-- Replaced SVG with the external JPG image -->
                 <img id="nok-target" 
                      src="file_00000000bd0461f5a6c90e9429ae20f6.png" 
                      alt="Ancient Nok Head terracotta sculpture" 
                      class="nok-head w-36 h-36 object-cover rounded-full shadow-lg" 
-                     onerror="this.onerror=null; this.src='https://placehold.co/144x144/a0522d/ffffff?text=Image+Error'" />
+                     onerror="this.onerror=null; this.src='https://placehold.co/144x144/4f46e5/ffffff?text=Node+Head'" />
 
-                <div id="start-overlay" class="absolute z-20 bg-yellow-900/90 w-full h-full rounded-xl flex items-center justify-center transition-opacity duration-300">
+                <div id="start-overlay" class="absolute z-20 bg-indigo-900/90 w-full h-full rounded-xl flex items-center justify-center transition-opacity duration-300">
                     <p class="text-white text-xl font-bold">Tap 'Start' to begin!</p>
                 </div>
-                <div id="message-box" class="absolute p-4 bg-red-600 text-white rounded-lg shadow-xl text-center text-lg font-bold hidden z-10">
+                <div id="message-box" class="absolute p-4 bg-purple-600 text-white rounded-lg shadow-xl text-center text-lg font-bold hidden z-10">
                     Time's Up!
                 </div>
             </div>
 
-            <!-- Controls -->
             <div class="space-y-4">
-                <button id="start-button" class="primary-button w-full py-4 text-xl font-bold rounded-xl bg-yellow-600 hover:bg-yellow-700 text-white uppercase tracking-wider">
+                <button id="start-button" class="primary-button w-full py-4 text-xl font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white uppercase tracking-wider">
                     Start Game
                 </button>
 
-                <!-- Share Section (initially hidden) -->
                 <div id="share-section" class="hidden space-y-3">
-                    <p class="text-center text-lg font-semibold text-green-700 mb-2">🎉 You hit <span id="final-score" class="font-black text-xl">0</span> Node Heads!</p>
-                    <button id="share-button" class="w-full py-3 text-lg font-bold rounded-xl bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center space-x-2">
-                        <!-- Twitter Icon SVG -->
+                    <p class="text-center text-lg font-semibold text-purple-700 mb-2">🎉 You hit <span id="final-score" class="font-black text-xl">0</span> Node Heads!</p>
+                    <button id="share-button" class="share-button w-full py-3 text-lg font-bold rounded-xl bg-purple-500 hover:bg-purple-600 text-white flex items-center justify-center space-x-2">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="white">
                             <path d="M23.643 4.937c-.832.37-1.73.618-2.675.733a4.671 4.671 0 002.048-2.576 9.363 9.363 0 01-2.95 1.137c-.783-.835-1.89-1.357-3.13-1.357-2.368 0-4.296 1.93-4.296 4.301 0 .337.039.664.116.979-3.57-.18-6.735-1.894-8.854-4.484-.37.636-.583 1.375-.583 2.16 0 1.49.757 2.809 1.905 3.58a4.28 4.28 0 01-1.946-.537v.053c0 2.094 1.488 3.837 3.465 4.23-.362.099-.744.152-1.135.152-.278 0-.547-.026-.807-.076.551 1.724 2.15 2.977 4.053 3.012-1.474 1.157-3.332 1.848-5.362 1.848-.35 0-.693-.021-1.029-.061 1.907 1.22 4.178 1.933 6.619 1.933 7.94 0 12.275-6.578 12.275-12.275 0-.188-.003-.375-.011-.561.845-.609 1.574-1.369 2.155-2.235z"/>
                         </svg>
                         <span>Share Score & Tag @nodexxplorer</span>
                     </button>
-                    <button id="change-nickname" class="w-full py-3 text-lg font-bold rounded-xl bg-gray-500 hover:bg-gray-600 text-white">
+                    <button id="change-nickname" class="w-full py-3 text-lg font-bold rounded-xl bg-indigo-400 hover:bg-indigo-500 text-white">
                         Change Nickname
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Sidenote Section -->
-        <div class="p-4 mt-6 bg-yellow-100 rounded-xl border border-yellow-300 text-sm text-yellow-900">
+        <div class="p-4 mt-6 bg-indigo-100 rounded-xl border border-indigo-300 text-sm text-indigo-900">
             <p class="font-bold mb-1">Side Note: Learn More About Node head</p>
-            <p>in total remembrance of how it started. <span class="font-semibold"> Notcoin and tapswap, </span> I mean.<a href="https://t.me/notcoin" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium"></a>.</p>
+            <p>in total remembrance of how it started. <span class="font-semibold"> Notcoin and tapswap, </span> I mean.</p>
         </div>
 
         <p class="text-center text-xs text-gray-400 mt-4">Made by NodeXplorer</p>
-
     </div>
 
     <script type="module">
         // ===== CONFIGURATION =====
-        // Replace this with your Google Apps Script Web App URL
-        // const GOOGLE_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
-
         const GAME_DURATION = 10; // seconds
         let playerNickname = '';
         let score = 0;
@@ -195,9 +178,8 @@
 
         function showMessage(text, isError = false) {
             messageBox.textContent = text;
-            messageBox.classList.remove('hidden', 'bg-red-600', 'bg-green-600'); 
+            messageBox.classList.remove('hidden', 'bg-red-600', 'bg-green-600');
             messageBox.classList.add(isError ? 'bg-red-600' : 'bg-green-600');
-
             setTimeout(() => {
                 messageBox.classList.add('hidden');
             }, 1500);
@@ -216,42 +198,16 @@
             nicknameInput.focus();
         }
 
-        // ===== GOOGLE SHEETS INTEGRATION =====
-
-        // async function saveScoreToSheet(nickname, score) {
-        //     try {
-        //         const timestamp = new Date().toISOString();
-        //         const response = await fetch(GOOGLE_SCRIPT_URL, {
-        //             method: 'POST',
-        //             mode: 'no-cors', // Important for Google Apps Script
-        //             headers: {
-        //                 'Content-Type': 'application/json',
-        //             },
-        //             body: JSON.stringify({
-        //                 nickname: nickname,
-        //                 score: score,
-        //                 timestamp: timestamp
-        //             })
-        //         });
-
-        //         console.log('Score saved successfully');
-        //         return true;
-        //     } catch (error) {
-        //         console.error('Error saving score:', error);
-        //         // Don't block the user experience if saving fails
-        //         return false;
-        //     }
-        // }
-
         // ===== GAME LOGIC =====
 
         function updateTimer() {
             timeLeft -= 0.1;
-
             if (timeLeft <= 0) {
                 timeLeft = 0;
                 clearInterval(gameInterval);
+                timerDisplay.textContent = timeLeft.toFixed(1);
                 endGame();
+                return;
             }
             timerDisplay.textContent = timeLeft.toFixed(1);
         }
@@ -266,8 +222,7 @@
             timerDisplay.textContent = timeLeft.toFixed(1);
 
             startOverlay.classList.add('opacity-0', 'pointer-events-none');
-            startOverlay.classList.remove('z-20'); 
-
+            startOverlay.classList.remove('z-20');
             shareSection.classList.add('hidden');
             startButton.textContent = 'Game In Progress...';
             startButton.disabled = true;
@@ -277,15 +232,14 @@
             nokTarget.addEventListener('touchstart', handleTap);
         }
 
-        async function endGame() {
+        function endGame() {
             gameState = 'FINISHED';
             nokTarget.removeEventListener('click', handleTap);
             nokTarget.removeEventListener('touchstart', handleTap);
 
-            // Save score to Google Sheets
-            await saveScoreToSheet(playerNickname, score);
+            clearInterval(gameInterval);
+            timerDisplay.textContent = '0.0';
 
-            // Update UI for end state
             startButton.textContent = 'Play Again';
             startButton.disabled = false;
 
@@ -296,6 +250,11 @@
             finalScoreDisplay.textContent = score;
             shareSection.classList.remove('hidden');
             showMessage("Time's Up!", true);
+
+            scoreDisplay.classList.add('pulse-score');
+            setTimeout(() => {
+                scoreDisplay.classList.remove('pulse-score');
+            }, 1000);
         }
 
         function handleTap(event) {
@@ -310,13 +269,6 @@
                 nokTarget.style.transform = 'scale(1)';
             }, 50);
         }
-
-        // function handleShare() {
-        //     const tweetText = encodeURIComponent(I'm ${playerNickname} and I scored ${score} points in the Node Head game! Can you beat me? 
-        //     const tweetURL = https://twitter.com/intent/tweet?text=${tweetText}&via=geektutor;
-
-        //     window.open(tweetURL, '_blank');
-        // }
 
         // ===== EVENT LISTENERS =====
 
@@ -342,8 +294,6 @@
             }
         });
 
-        // shareButton.addEventListener('click', handleShare);
-
         changeNicknameBtn.addEventListener('click', () => {
             showNicknameScreen();
         });
@@ -352,7 +302,6 @@
         startButton.textContent = 'Start Game';
         startOverlay.classList.remove('opacity-0', 'pointer-events-none');
         startOverlay.classList.add('z-20');
-
     </script>
 </body>
 </html>
