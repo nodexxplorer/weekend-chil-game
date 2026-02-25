@@ -168,8 +168,9 @@
 
     <script type="module">
         // ===== CONFIGURATION =====
-        // 🔁 Replace this with your Google Apps Script Web App URL
-        const GOOGLE_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+        // 🔁 REPLACE THIS WITH YOUR ACTUAL DEPLOYED WEB APP URL
+        // Example: https://script.google.com/macros/s/ABCDE12345/exec
+        const GOOGLE_SCRIPT_URL = '1pw4eYOjknlBoyW2HJGwF1ifRKU5L0HIpOBhpxQIrJInBDzBHoivt8rFE';
 
         const GAME_DURATION = 10;
         let playerNickname = '';
@@ -198,84 +199,95 @@
         const leaderboardPanel = document.getElementById('leaderboard-panel');
         const leaderboardEntries = document.getElementById('leaderboard-entries');
 
-        // ===== GOOGLE SHEETS INTEGRATION =====
-
-        // Save score to Google Sheets
-        async function saveScoreToSheet(nickname, scoreValue) {
-            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === '1pw4eYOjknlBoyW2HJGwF1ifRKU5L0HIpOBhpxQIrJInBDzBHoivt8rFE') {
-                console.warn('Google Script URL not set. Score not saved.');
-                return false;
-            }
-            try {
-                const timestamp = new Date().toISOString();
-                // Using no-cors to avoid CORS issues, but this means we can't read response.
-                // For better reliability, you might want to set up the Apps Script to return JSONP.
-                await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        nickname: nickname,
-                        score: scoreValue,
-                        timestamp: timestamp
-                    })
-                });
-                console.log('Score saved successfully');
-                return true;
-            } catch (error) {
-                console.error('Error saving score:', error);
-                return false;
-            }
-        }
-
-        // Fetch today's leaderboard from Google Sheets
-        async function fetchLeaderboardFromSheet() {
-            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
-                leaderboardEntries.innerHTML = '<p class="text-gray-500 italic">Set up Google Script URL</p>';
-                return [];
-            }
-            try {
-                // Using a GET request with a cache-buster
-                const url = `${GOOGLE_SCRIPT_URL}?action=getToday&t=${Date.now()}`;
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const data = await response.json();
-                // Expect data to be an array of { nickname, score, date } sorted descending
-                return data || [];
-            } catch (error) {
-                console.error('Error fetching leaderboard:', error);
-                leaderboardEntries.innerHTML = '<p class="text-gray-500 italic">Failed to load. Using local cache.</p>';
-                // Fallback to localStorage if network fails
-                return getLocalTodayScores();
-            }
-        }
-
-        // Local fallback (same as before)
-        function getLocalTodayScores() {
-            const stored = localStorage.getItem('nodeHeadScores');
-            const all = stored ? JSON.parse(stored) : [];
-            const today = getTodayKey();
-            return all.filter(entry => entry.date === today).sort((a, b) => b.score - a.score);
-        }
-
+        // ===== HELPER: today's date as YYYY-MM-DD =====
         function getTodayKey() {
             const d = new Date();
             return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         }
 
-        // Add to local storage as backup (optional)
+        // ===== LOCAL STORAGE FALLBACK =====
+        function getLocalTodayScores() {
+            const stored = localStorage.getItem('nodeHeadScores');
+            const all = stored ? JSON.parse(stored) : [];
+            const today = getTodayKey();
+            return all.filter(entry => entry.date === today);
+        }
+
         function addScoreToLocalStorage(nickname, scoreValue) {
             const all = JSON.parse(localStorage.getItem('nodeHeadScores') || '[]');
             const today = getTodayKey();
             all.push({ nickname, score: scoreValue, date: today, timestamp: Date.now() });
-            if (all.length > 100) all.shift();
+            // Keep only last 200 entries
+            if (all.length > 200) all.splice(0, all.length - 200);
             localStorage.setItem('nodeHeadScores', JSON.stringify(all));
         }
 
-        // Render leaderboard with data from server
+        // ===== SEED LOCAL STORAGE WITH SAMPLE DATA (for testing) =====
+        function seedLocalStorage() {
+            const today = getTodayKey();
+            const samples = [
+                { nickname: 'NodeMaster', score: 42, date: today },
+                { nickname: 'TapKing', score: 37, date: today },
+                { nickname: 'CryptoFan', score: 28, date: today },
+                { nickname: 'BlockchainBen', score: 31, date: today },
+                { nickname: 'Satoshi', score: 45, date: today }
+            ];
+            localStorage.setItem('nodeHeadScores', JSON.stringify(samples));
+        }
+
+        // If local storage is empty, seed it so leaderboard shows something
+        if (!localStorage.getItem('nodeHeadScores')) {
+            seedLocalStorage();
+        }
+
+        // ===== DEDUPLICATION: keep only highest score per nickname =====
+        function deduplicateScores(scores) {
+            const best = new Map(); // nickname -> highest score
+            scores.forEach(entry => {
+                const existing = best.get(entry.nickname);
+                if (!existing || entry.score > existing.score) {
+                    best.set(entry.nickname, entry.score);
+                }
+            });
+            // Convert back to array and sort descending
+            return Array.from(best.entries())
+                .map(([nickname, score]) => ({ nickname, score }))
+                .sort((a, b) => b.score - a.score);
+        }
+
+        // ===== FETCH FROM GOOGLE SHEET (with fallback to local) =====
+        async function fetchLeaderboard() {
+            // If URL is not set, skip network and go straight to local
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                console.warn('Google Script URL not configured. Using local storage.');
+                const localScores = getLocalTodayScores();
+                return deduplicateScores(localScores);
+            }
+
+            try {
+                const url = `${GOOGLE_SCRIPT_URL}?action=getToday&t=${Date.now()}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                // Expect data to be array of { nickname, score } or { nickname, score, date }
+                if (Array.isArray(data) && data.length) {
+                    return deduplicateScores(data);
+                } else {
+                    // Fallback to local if server returns empty or invalid
+                    const localScores = getLocalTodayScores();
+                    return deduplicateScores(localScores);
+                }
+            } catch (error) {
+                console.error('Error fetching leaderboard:', error);
+                const localScores = getLocalTodayScores();
+                return deduplicateScores(localScores);
+            }
+        }
+
+        // ===== RENDER LEADERBOARD =====
         async function renderLeaderboard() {
             leaderboardEntries.innerHTML = '<p class="text-gray-500 italic">Loading...</p>';
-            const scores = await fetchLeaderboardFromSheet();
+            const scores = await fetchLeaderboard();
             if (scores.length === 0) {
                 leaderboardEntries.innerHTML = '<p class="text-gray-500 italic">No scores yet today.</p>';
                 return;
@@ -291,6 +303,28 @@
             leaderboardEntries.innerHTML = html;
         }
 
+        // ===== SAVE SCORE TO GOOGLE SHEET (fire and forget) =====
+        async function saveScoreToSheet(nickname, scoreValue) {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                // Still save locally
+                addScoreToLocalStorage(nickname, scoreValue);
+                return;
+            }
+            try {
+                const timestamp = new Date().toISOString();
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nickname, score: scoreValue, timestamp })
+                });
+                console.log('Score saved to sheet');
+            } catch (error) {
+                console.error('Error saving to sheet, saving locally only:', error);
+                addScoreToLocalStorage(nickname, scoreValue);
+            }
+        }
+
         // ===== SHARE ON X =====
         function handleShare() {
             if (!playerNickname || score === undefined) return;
@@ -300,7 +334,6 @@
         }
 
         // ===== GAME LOGIC =====
-
         function updateTimer() {
             timeLeft -= 0.1;
             if (timeLeft <= 0) {
@@ -325,7 +358,6 @@
             startOverlay.classList.add('opacity-0', 'pointer-events-none');
             startOverlay.classList.remove('z-20');
             shareSection.classList.add('hidden');
-            // Hide leaderboard when game starts
             leaderboardPanel.classList.add('hidden');
             toggleLeaderboardBtn.textContent = '🏆 Show Global Leaderboard';
             startButton.textContent = 'Game In Progress...';
@@ -344,10 +376,8 @@
             clearInterval(gameInterval);
             timerDisplay.textContent = '0.0';
 
-            // Save to Google Sheets (fire and forget)
-            saveScoreToSheet(playerNickname, score);
-            // Also save locally as backup
-            addScoreToLocalStorage(playerNickname, score);
+            // Save score (to sheet if possible, otherwise local)
+            await saveScoreToSheet(playerNickname, score);
 
             // If leaderboard panel is open, refresh it
             if (!leaderboardPanel.classList.contains('hidden')) {
@@ -397,8 +427,8 @@
             nicknameScreen.classList.add('hidden');
             gameScreen.classList.remove('hidden');
             playerNicknameDisplay.textContent = playerNickname;
-            // Optionally pre-load leaderboard in background
-            renderLeaderboard(); // will show loading and then update when done
+            // Preload leaderboard in background (doesn't block UI)
+            renderLeaderboard();
         }
 
         function showNicknameScreen() {
@@ -409,7 +439,6 @@
         }
 
         // ===== EVENT LISTENERS =====
-
         nicknameSubmit.addEventListener('click', () => {
             const nickname = nicknameInput.value.trim();
             if (nickname.length < 2) {
