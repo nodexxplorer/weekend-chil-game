@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,53 +20,74 @@
             font-family: 'Inter', sans-serif;
             background-color: #e0e7ff;
         }
+
         .game-container {
             max-width: 420px;
             margin: 0 auto;
         }
+
         .nok-head {
             cursor: pointer;
             transition: transform 0.05s ease-out;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
+
         .nok-head:active {
             transform: scale(0.95);
         }
+
         .primary-button {
             transition: all 0.2s;
             box-shadow: 0 4px #3730a3;
         }
+
         .primary-button:active {
             transform: translateY(2px);
             box-shadow: 0 2px #3730a3;
         }
+
         .share-button {
             transition: all 0.2s;
             box-shadow: 0 4px #6b21a5;
         }
+
         .share-button:active {
             transform: translateY(2px);
             box-shadow: 0 2px #6b21a5;
         }
+
         .leaderboard-button {
             transition: all 0.2s;
             box-shadow: 0 4px #1e40af;
         }
+
         .leaderboard-button:active {
             transform: translateY(2px);
             box-shadow: 0 2px #1e40af;
         }
+
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); color: #4f46e5; }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+                color: #4f46e5;
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
+
         .pulse-score {
             animation: pulse 0.5s ease-in-out 2;
         }
     </style>
 </head>
+
 <body class="min-h-screen flex items-center justify-center p-4">
     <div class="game-container bg-white p-6 rounded-2xl shadow-2xl border-b-8 border-indigo-800/50">
         <header class="text-center mb-6">
@@ -79,16 +101,13 @@
                 <label for="nickname-input" class="block text-lg font-bold text-indigo-900 mb-2">
                     Enter Your Nickname
                 </label>
-                <input 
-                    type="text" 
-                    id="nickname-input" 
-                    placeholder="e.g., CodeNinja, TechGuru"
-                    maxlength="20"
-                    class="w-full px-4 py-3 text-lg border-2 border-indigo-400 rounded-lg focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200"
-                />
-                <p class="text-xs text-gray-500 mt-2">This will be used to track your score on the global leaderboard!</p>
+                <input type="text" id="nickname-input" placeholder="e.g., CodeNinja, TechGuru" maxlength="20"
+                    class="w-full px-4 py-3 text-lg border-2 border-indigo-400 rounded-lg focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200" />
+                <p class="text-xs text-gray-500 mt-2">This will be used to track your score on the global leaderboard!
+                </p>
             </div>
-            <button id="nickname-submit" class="primary-button w-full py-4 text-xl font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white uppercase tracking-wider">
+            <button id="nickname-submit"
+                class="primary-button w-full py-4 text-xl font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white uppercase tracking-wider">
                 Continue to Game
             </button>
         </div>
@@ -96,7 +115,8 @@
         <!-- Game Screen -->
         <div id="game-screen" class="hidden">
             <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-200 mb-4">
-                <p class="text-sm text-gray-600">Playing as: <span id="player-nickname" class="font-bold text-indigo-900"></span></p>
+                <p class="text-sm text-gray-600">Playing as: <span id="player-nickname"
+                        class="font-bold text-indigo-900"></span></p>
             </div>
 
             <div class="flex justify-between text-center mb-6 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
@@ -111,45 +131,53 @@
             </div>
 
             <div id="game-area" class="relative flex justify-center items-center h-48 bg-gray-100 rounded-xl mb-6">
-                <img id="nok-target" 
-                     src="file_00000000bd0461f5a6c90e9429ae20f6.png" 
-                     alt="Ancient Nok Head terracotta sculpture" 
-                     class="nok-head w-36 h-36 object-cover rounded-full shadow-lg" 
-                     onerror="this.onerror=null; this.src='https://placehold.co/144x144/4f46e5/ffffff?text=Node+Head'" />
+                <img id="nok-target" src="file_00000000bd0461f5a6c90e9429ae20f6.png"
+                    alt="Ancient Nok Head terracotta sculpture"
+                    class="nok-head w-36 h-36 object-cover rounded-full shadow-lg"
+                    onerror="this.onerror=null; this.src='https://placehold.co/144x144/4f46e5/ffffff?text=Node+Head'" />
 
-                <div id="start-overlay" class="absolute z-20 bg-indigo-900/90 w-full h-full rounded-xl flex items-center justify-center transition-opacity duration-300">
+                <div id="start-overlay"
+                    class="absolute z-20 bg-indigo-900/90 w-full h-full rounded-xl flex items-center justify-center transition-opacity duration-300">
                     <p class="text-white text-xl font-bold">Tap 'Start' to begin!</p>
                 </div>
-                <div id="message-box" class="absolute p-4 bg-purple-600 text-white rounded-lg shadow-xl text-center text-lg font-bold hidden z-10">
+                <div id="message-box"
+                    class="absolute p-4 bg-purple-600 text-white rounded-lg shadow-xl text-center text-lg font-bold hidden z-10">
                     Time's Up!
                 </div>
             </div>
 
             <div class="space-y-4">
-                <button id="start-button" class="primary-button w-full py-4 text-xl font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white uppercase tracking-wider">
+                <button id="start-button"
+                    class="primary-button w-full py-4 text-xl font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white uppercase tracking-wider">
                     Start Game
                 </button>
 
                 <div id="share-section" class="hidden space-y-3">
-                    <p class="text-center text-lg font-semibold text-purple-700 mb-2">🎉 You hit <span id="final-score" class="font-black text-xl">0</span> Node Heads!</p>
-                    <button id="share-button" class="share-button w-full py-3 text-lg font-bold rounded-xl bg-purple-500 hover:bg-purple-600 text-white flex items-center justify-center space-x-2">
+                    <p class="text-center text-lg font-semibold text-purple-700 mb-2">🎉 You hit <span id="final-score"
+                            class="font-black text-xl">0</span> Node Heads!</p>
+                    <button id="share-button"
+                        class="share-button w-full py-3 text-lg font-bold rounded-xl bg-purple-500 hover:bg-purple-600 text-white flex items-center justify-center space-x-2">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="white">
-                            <path d="M23.643 4.937c-.832.37-1.73.618-2.675.733a4.671 4.671 0 002.048-2.576 9.363 9.363 0 01-2.95 1.137c-.783-.835-1.89-1.357-3.13-1.357-2.368 0-4.296 1.93-4.296 4.301 0 .337.039.664.116.979-3.57-.18-6.735-1.894-8.854-4.484-.37.636-.583 1.375-.583 2.16 0 1.49.757 2.809 1.905 3.58a4.28 4.28 0 01-1.946-.537v.053c0 2.094 1.488 3.837 3.465 4.23-.362.099-.744.152-1.135.152-.278 0-.547-.026-.807-.076.551 1.724 2.15 2.977 4.053 3.012-1.474 1.157-3.332 1.848-5.362 1.848-.35 0-.693-.021-1.029-.061 1.907 1.22 4.178 1.933 6.619 1.933 7.94 0 12.275-6.578 12.275-12.275 0-.188-.003-.375-.011-.561.845-.609 1.574-1.369 2.155-2.235z"/>
+                            <path
+                                d="M23.643 4.937c-.832.37-1.73.618-2.675.733a4.671 4.671 0 002.048-2.576 9.363 9.363 0 01-2.95 1.137c-.783-.835-1.89-1.357-3.13-1.357-2.368 0-4.296 1.93-4.296 4.301 0 .337.039.664.116.979-3.57-.18-6.735-1.894-8.854-4.484-.37.636-.583 1.375-.583 2.16 0 1.49.757 2.809 1.905 3.58a4.28 4.28 0 01-1.946-.537v.053c0 2.094 1.488 3.837 3.465 4.23-.362.099-.744.152-1.135.152-.278 0-.547-.026-.807-.076.551 1.724 2.15 2.977 4.053 3.012-1.474 1.157-3.332 1.848-5.362 1.848-.35 0-.693-.021-1.029-.061 1.907 1.22 4.178 1.933 6.619 1.933 7.94 0 12.275-6.578 12.275-12.275 0-.188-.003-.375-.011-.561.845-.609 1.574-1.369 2.155-2.235z" />
                         </svg>
                         <span>Share Score & Tag @nodexxplorer</span>
                     </button>
-                    <button id="change-nickname" class="w-full py-3 text-lg font-bold rounded-xl bg-indigo-400 hover:bg-indigo-500 text-white">
+                    <button id="change-nickname"
+                        class="w-full py-3 text-lg font-bold rounded-xl bg-indigo-400 hover:bg-indigo-500 text-white">
                         Change Nickname
                     </button>
                 </div>
 
                 <!-- Leaderboard toggle button -->
-                <button id="toggle-leaderboard" class="leaderboard-button w-full py-3 text-lg font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
+                <button id="toggle-leaderboard"
+                    class="leaderboard-button w-full py-3 text-lg font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
                     🏆 Show Global Leaderboard
                 </button>
 
                 <!-- Leaderboard panel (hidden by default) -->
-                <div id="leaderboard-panel" class="hidden bg-indigo-50 p-4 rounded-xl border border-indigo-200 space-y-2 max-h-60 overflow-y-auto">
+                <div id="leaderboard-panel"
+                    class="hidden bg-indigo-50 p-4 rounded-xl border border-indigo-200 space-y-2 max-h-60 overflow-y-auto">
                     <h3 class="font-bold text-indigo-900 text-center">Today's Top Players (Global)</h3>
                     <div id="leaderboard-entries" class="text-sm">
                         <p class="text-gray-500 italic">Loading...</p>
@@ -160,7 +188,8 @@
 
         <div class="p-4 mt-6 bg-indigo-100 rounded-xl border border-indigo-300 text-sm text-indigo-900">
             <p class="font-bold mb-1">Side Note: Learn More About Node head</p>
-            <p>in total remembrance of how it started. <span class="font-semibold"> Notcoin and tapswap, </span> I mean.</p>
+            <p>in total remembrance of how it started. <span class="font-semibold"> Notcoin and tapswap, </span> I mean.
+            </p>
         </div>
 
         <p class="text-center text-xs text-gray-400 mt-4">Made by NodeXplorer</p>
@@ -170,7 +199,7 @@
         // ===== CONFIGURATION =====
         // 🔁 REPLACE THIS WITH YOUR ACTUAL DEPLOYED WEB APP URL
         // Example: https://script.google.com/macros/s/ABCDE12345/exec
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzCQcy6BxIps8FfGC6URc2jR3SPyAxQzUekL3TWcSsJ2TIF5HKtyPZ6etsRrAVulas-/exec';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-zKEu09vuURkyJ_WhnpPWWaf2LQM2sQDwoAZlYAsuAvvoeex8_su_U5zvgHJrNb_2/exec';
 
         const GAME_DURATION = 10;
         let playerNickname = '';
@@ -202,7 +231,7 @@
         // ===== HELPER: today's date as YYYY-MM-DD =====
         function getTodayKey() {
             const d = new Date();
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         }
 
         // ===== LOCAL STORAGE FALLBACK =====
@@ -255,33 +284,62 @@
                 .sort((a, b) => b.score - a.score);
         }
 
-        // ===== FETCH FROM GOOGLE SHEET (with fallback to local) =====
-        async function fetchLeaderboard() {
+        // ===== FETCH FROM GOOGLE SHEET via JSONP (bypasses CORS) =====
+        function fetchLeaderboard() {
             // If URL is not set, skip network and go straight to local
             if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
                 console.warn('Google Script URL not configured. Using local storage.');
                 const localScores = getLocalTodayScores();
-                return deduplicateScores(localScores);
+                return Promise.resolve(deduplicateScores(localScores));
             }
 
-            try {
-                const url = `${GOOGLE_SCRIPT_URL}?action=getToday&t=${Date.now()}`;
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const data = await response.json();
-                // Expect data to be array of { nickname, score } or { nickname, score, date }
-                if (Array.isArray(data) && data.length) {
-                    return deduplicateScores(data);
-                } else {
-                    // Fallback to local if server returns empty or invalid
+            return new Promise((resolve) => {
+                const callbackName = 'leaderboardCallback_' + Date.now();
+                const script = document.createElement('script');
+                let settled = false;
+
+                // Timeout: fall back to local after 5 seconds
+                const timer = setTimeout(() => {
+                    if (settled) return;
+                    settled = true;
+                    cleanup();
+                    console.warn('Leaderboard fetch timed out. Using local storage.');
                     const localScores = getLocalTodayScores();
-                    return deduplicateScores(localScores);
+                    resolve(deduplicateScores(localScores));
+                }, 5000);
+
+                function cleanup() {
+                    clearTimeout(timer);
+                    delete window[callbackName];
+                    if (script.parentNode) script.parentNode.removeChild(script);
                 }
-            } catch (error) {
-                console.error('Error fetching leaderboard:', error);
-                const localScores = getLocalTodayScores();
-                return deduplicateScores(localScores);
-            }
+
+                window[callbackName] = function (data) {
+                    if (settled) return;
+                    settled = true;
+                    cleanup();
+                    if (Array.isArray(data) && data.length) {
+                        resolve(deduplicateScores(data));
+                    } else {
+                        console.warn('Empty or invalid data from sheet. Using local storage.');
+                        const localScores = getLocalTodayScores();
+                        resolve(deduplicateScores(localScores));
+                    }
+                };
+
+                script.onerror = function () {
+                    if (settled) return;
+                    settled = true;
+                    cleanup();
+                    console.error('JSONP script load failed. Using local storage.');
+                    const localScores = getLocalTodayScores();
+                    resolve(deduplicateScores(localScores));
+                };
+
+                const url = `${GOOGLE_SCRIPT_URL}?action=getToday&callback=${callbackName}&t=${Date.now()}`;
+                script.src = url;
+                document.head.appendChild(script);
+            });
         }
 
         // ===== RENDER LEADERBOARD =====
@@ -484,4 +542,5 @@
         startOverlay.classList.add('z-20');
     </script>
 </body>
+
 </html>
