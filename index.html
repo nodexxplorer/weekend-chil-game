@@ -68,27 +68,190 @@
         }
 
         @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.1);
-                color: #4f46e5;
-            }
-
-            100% {
-                transform: scale(1);
-            }
+            0%   { transform: scale(1); }
+            50%  { transform: scale(1.1); color: #4f46e5; }
+            100% { transform: scale(1); }
         }
 
         .pulse-score {
             animation: pulse 0.5s ease-in-out 2;
         }
+
+        /* ── MILESTONE OVERLAY ── */
+        #milestone-overlay {
+            pointer-events: none;
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+        }
+
+        #milestone-overlay.show {
+            animation: milestone-fade 1.4s ease-out forwards;
+        }
+
+        @keyframes milestone-fade {
+            0%   { opacity: 0; transform: scale(0.5); }
+            20%  { opacity: 1; transform: scale(1.1); }
+            50%  { opacity: 1; transform: scale(1); }
+            80%  { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.95) translateY(-30px); }
+        }
+
+        .milestone-number {
+            font-size: clamp(5rem, 22vw, 9rem);
+            font-weight: 900;
+            line-height: 1;
+            color: #4f46e5;
+            text-shadow: 0 0 40px rgba(79,70,229,0.6), 0 4px 0 #3730a3;
+            letter-spacing: -0.02em;
+        }
+
+        .milestone-label {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: #7c3aed;
+            margin-top: 6px;
+        }
+
+        /* ── CONFETTI ── */
+        .confetti-piece {
+            position: fixed;
+            width: 9px;
+            height: 9px;
+            border-radius: 2px;
+            pointer-events: none;
+            z-index: 9998;
+            animation: confetti-drop linear forwards;
+        }
+
+        @keyframes confetti-drop {
+            0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+            100% { opacity: 0; transform: translateY(105vh) rotate(900deg); }
+        }
+
+        /* ── TIMER PROGRESS BAR ── */
+        #timer-bar-wrap {
+            width: 100%;
+            height: 6px;
+            background: #c7d2fe;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        #timer-bar-fill {
+            height: 100%;
+            width: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            transform-origin: left center;
+            transition: transform 0.1s linear, background 0.3s;
+        }
+
+        #timer-bar-fill.urgent {
+            background: linear-gradient(90deg, #dc2626, #f97316) !important;
+            animation: bar-pulse 0.35s ease-in-out infinite alternate;
+        }
+
+        @keyframes bar-pulse {
+            from { opacity: 1; }
+            to   { opacity: 0.5; }
+        }
+
+        /* ── REACTION TIME SECTION ── */
+        .rt-section {
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+
+        .rt-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #4338ca;
+            margin-bottom: 10px;
+        }
+
+        .rt-stats-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .rt-stat {
+            flex: 1;
+            background: white;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 8px 6px;
+            text-align: center;
+        }
+
+        .rt-stat-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #6366f1;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .rt-stat-value {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: #312e81;
+        }
+
+        .rt-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.6rem;
+            color: #6366f1;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .rt-bar-label { width: 72px; flex-shrink: 0; }
+
+        .rt-bar-bg {
+            flex: 1;
+            height: 7px;
+            background: #c7d2fe;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .rt-bar-fg {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.6s ease;
+        }
+
+        .rt-bar-pct { width: 30px; text-align: right; flex-shrink: 0; }
     </style>
 </head>
 
 <body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- MILESTONE OVERLAY (sits above everything) -->
+    <div id="milestone-overlay">
+        <div class="milestone-number" id="milestone-number">50</div>
+        <div class="milestone-label"  id="milestone-label">Milestone! 🎉</div>
+    </div>
+
     <div class="game-container bg-white p-6 rounded-2xl shadow-2xl border-b-8 border-indigo-800/50">
         <header class="text-center mb-6">
             <h1 class="text-3xl font-extrabold text-indigo-800">The Node Head</h1>
@@ -103,9 +266,580 @@
                 </label>
                 <input type="text" id="nickname-input" placeholder="e.g., CodeNinja, TechGuru" maxlength="20"
                     class="w-full px-4 py-3 text-lg border-2 border-indigo-400 rounded-lg focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200" />
-                <p class="text-xs text-gray-500 mt-2">This will be used to track your score on the global leaderboard!
-                </p>
+                <p class="text-xs text-gray-500 mt-2">This will be used to track your score on the global leaderboard!</p>
             </div>
+            <button id="nickname-submit"
+                class="primary-button w-full py-4 text-xl font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white uppercase tracking-wider">
+                Continue to Game
+            </button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="hidden">
+            <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-200 mb-4">
+                <p class="text-sm text-gray-600">Playing as: <span id="player-nickname" class="font-bold text-indigo-900"></span></p>
+            </div>
+
+            <div class="flex justify-between text-center mb-3 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                <div>
+                    <p class="text-sm font-semibold text-gray-500">Score</p>
+                    <p id="score-display" class="text-4xl font-black text-indigo-900">0</p>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-gray-500">Time Left</p>
+                    <p id="timer-display" class="text-4xl font-black text-purple-600">10.0</p>
+                </div>
+            </div>
+
+            <!-- Timer progress bar -->
+            <div id="timer-bar-wrap">
+                <div id="timer-bar-fill"></div>
+            </div>
+
+            <div id="game-area" class="relative flex justify-center items-center h-48 bg-gray-100 rounded-xl mb-6">
+                <img id="nok-target" src="file_00000000bd0461f5a6c90e9429ae20f6.png"
+                    alt="Ancient Nok Head terracotta sculpture"
+                    class="nok-head w-36 h-36 object-cover rounded-full shadow-lg"
+                    onerror="this.onerror=null; this.src='https://placehold.co/144x144/4f46e5/ffffff?text=Node+Head'" />
+
+                <div id="start-overlay"
+                    class="absolute z-20 bg-indigo-900/90 w-full h-full rounded-xl flex items-center justify-center transition-opacity duration-300">
+                    <p class="text-white text-xl font-bold">Tap 'Start' to begin!</p>
+                </div>
+                <div id="message-box"
+                    class="absolute p-4 bg-purple-600 text-white rounded-lg shadow-xl text-center text-lg font-bold hidden z-10">
+                    Time's Up!
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <button id="start-button"
+                    class="primary-button w-full py-4 text-xl font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white uppercase tracking-wider">
+                    Start Game
+                </button>
+
+                <div id="share-section" class="hidden space-y-3">
+                    <p class="text-center text-lg font-semibold text-purple-700 mb-2">
+                        🎉 You hit <span id="final-score" class="font-black text-xl">0</span> Node Heads!
+                    </p>
+
+                    <!-- REACTION TIME PANEL -->
+                    <div class="rt-section" id="rt-section" style="display:none">
+                        <div class="rt-title">⚡ Reaction Time Breakdown</div>
+                        <div class="rt-stats-row">
+                            <div class="rt-stat">
+                                <span class="rt-stat-label">Avg RT</span>
+                                <span class="rt-stat-value" id="rt-avg">—</span>
+                            </div>
+                            <div class="rt-stat">
+                                <span class="rt-stat-label">Best RT</span>
+                                <span class="rt-stat-value" id="rt-best">—</span>
+                            </div>
+                            <div class="rt-stat">
+                                <span class="rt-stat-label">Taps/sec</span>
+                                <span class="rt-stat-value" id="rt-tps">—</span>
+                            </div>
+                        </div>
+                        <div id="rt-bars"></div>
+                    </div>
+
+                    <button id="share-button"
+                        class="share-button w-full py-3 text-lg font-bold rounded-xl bg-purple-500 hover:bg-purple-600 text-white flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="white">
+                            <path d="M23.643 4.937c-.832.37-1.73.618-2.675.733a4.671 4.671 0 002.048-2.576 9.363 9.363 0 01-2.95 1.137c-.783-.835-1.89-1.357-3.13-1.357-2.368 0-4.296 1.93-4.296 4.301 0 .337.039.664.116.979-3.57-.18-6.735-1.894-8.854-4.484-.37.636-.583 1.375-.583 2.16 0 1.49.757 2.809 1.905 3.58a4.28 4.28 0 01-1.946-.537v.053c0 2.094 1.488 3.837 3.465 4.23-.362.099-.744.152-1.135.152-.278 0-.547-.026-.807-.076.551 1.724 2.15 2.977 4.053 3.012-1.474 1.157-3.332 1.848-5.362 1.848-.35 0-.693-.021-1.029-.061 1.907 1.22 4.178 1.933 6.619 1.933 7.94 0 12.275-6.578 12.275-12.275 0-.188-.003-.375-.011-.561.845-.609 1.574-1.369 2.155-2.235z"/>
+                        </svg>
+                        <span>Share Score & Tag @nodexxplorer</span>
+                    </button>
+                    <button id="change-nickname"
+                        class="w-full py-3 text-lg font-bold rounded-xl bg-indigo-400 hover:bg-indigo-500 text-white">
+                        Change Nickname
+                    </button>
+                </div>
+
+                <!-- Leaderboard toggle button -->
+                <button id="toggle-leaderboard"
+                    class="leaderboard-button w-full py-3 text-lg font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
+                    🏆 Show Global Leaderboard
+                </button>
+
+                <!-- Leaderboard panel -->
+                <div id="leaderboard-panel"
+                    class="hidden bg-indigo-50 p-4 rounded-xl border border-indigo-200 space-y-2 max-h-60 overflow-y-auto">
+                    <h3 class="font-bold text-indigo-900 text-center">Today's Top Players (Global)</h3>
+                    <div id="leaderboard-entries" class="text-sm">
+                        <p class="text-gray-500 italic">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 mt-6 bg-indigo-100 rounded-xl border border-indigo-300 text-sm text-indigo-900">
+            <p class="font-bold mb-1">Side Note: Learn More About Node head</p>
+            <p>in total remembrance of how it started. <span class="font-semibold"> Notcoin and tapswap, </span> I mean.</p>
+        </div>
+
+        <p class="text-center text-xs text-gray-400 mt-4">Made by NodeXplorer</p>
+    </div>
+
+    <script type="module">
+        // ===== CONFIGURATION =====
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-zKEu09vuURkyJ_WhnpPWWaf2LQM2sQDwoAZlYAsuAvvoeex8_su_U5zvgHJrNb_2/exec';
+        const GAME_DURATION = 10;
+        const MILESTONES    = [50, 100, 150];
+
+        let playerNickname = '';
+        let score          = 0;
+        let timeLeft       = GAME_DURATION;
+        let gameInterval;
+        let gameState      = 'IDLE';
+
+        // New feature state
+        let lastTapTime        = null;
+        let reactionTimes      = [];
+        let triggeredMilestones = new Set();
+        let audioCtx           = null;
+
+        // DOM references
+        const nicknameScreen       = document.getElementById('nickname-screen');
+        const gameScreen           = document.getElementById('game-screen');
+        const nicknameInput        = document.getElementById('nickname-input');
+        const nicknameSubmit       = document.getElementById('nickname-submit');
+        const playerNicknameDisplay = document.getElementById('player-nickname');
+        const scoreDisplay         = document.getElementById('score-display');
+        const timerDisplay         = document.getElementById('timer-display');
+        const timerBarFill         = document.getElementById('timer-bar-fill');
+        const startButton          = document.getElementById('start-button');
+        const nokTarget            = document.getElementById('nok-target');
+        const startOverlay         = document.getElementById('start-overlay');
+        const shareSection         = document.getElementById('share-section');
+        const shareButton          = document.getElementById('share-button');
+        const changeNicknameBtn    = document.getElementById('change-nickname');
+        const finalScoreDisplay    = document.getElementById('final-score');
+        const messageBox           = document.getElementById('message-box');
+        const toggleLeaderboardBtn = document.getElementById('toggle-leaderboard');
+        const leaderboardPanel     = document.getElementById('leaderboard-panel');
+        const leaderboardEntries   = document.getElementById('leaderboard-entries');
+        const milestoneOverlay     = document.getElementById('milestone-overlay');
+        const milestoneNumber      = document.getElementById('milestone-number');
+        const milestoneLabel       = document.getElementById('milestone-label');
+        const rtSection            = document.getElementById('rt-section');
+
+        // =====================================================
+        // ── AUDIO (Web Audio API – no external files) ──
+        // =====================================================
+        function getAudioCtx() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            return audioCtx;
+        }
+
+        // Escalating tick – pitch rises as time runs out; called every 100ms in last 3s
+        function playUrgentTick(timeRemaining) {
+            try {
+                const ctx  = getAudioCtx();
+                const osc  = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                // Pitch climbs from ~520 Hz to ~850 Hz over the final 3 seconds
+                osc.frequency.value = 520 + (GAME_DURATION - timeRemaining) * 55;
+                osc.type = 'square';
+                gain.gain.setValueAtTime(0.07, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.07);
+            } catch (_) {}
+        }
+
+        // Four-note rising chord for milestones
+        function playMilestoneChord() {
+            try {
+                const ctx = getAudioCtx();
+                [523, 659, 784, 1047].forEach((freq, i) => {
+                    const osc  = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.frequency.value = freq;
+                    osc.type = 'sine';
+                    const t = ctx.currentTime + i * 0.09;
+                    gain.gain.setValueAtTime(0.22, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+                    osc.start(t);
+                    osc.stop(t + 0.35);
+                });
+            } catch (_) {}
+        }
+
+        // End-game fanfare
+        function playEndFanfare() {
+            try {
+                const ctx = getAudioCtx();
+                [392, 523, 659, 784].forEach((freq, i) => {
+                    const osc  = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.frequency.value = freq;
+                    osc.type = 'triangle';
+                    const t = ctx.currentTime + i * 0.11;
+                    gain.gain.setValueAtTime(0.18, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+                    osc.start(t);
+                    osc.stop(t + 0.4);
+                });
+            } catch (_) {}
+        }
+
+        // =====================================================
+        // ── MILESTONE CELEBRATION ──
+        // =====================================================
+        function triggerMilestone(n) {
+            playMilestoneChord();
+            spawnConfetti(50);
+
+            milestoneNumber.textContent = n;
+            milestoneLabel.textContent  = n === 50  ? '🔥 On Fire!'
+                                        : n === 100 ? '💯 Century!'
+                                        :             '🚀 Unstoppable!';
+
+            // Re-trigger animation by cloning the class
+            milestoneOverlay.classList.remove('show');
+            void milestoneOverlay.offsetWidth; // force reflow
+            milestoneOverlay.classList.add('show');
+            setTimeout(() => milestoneOverlay.classList.remove('show'), 1500);
+        }
+
+        function spawnConfetti(count) {
+            const colors = ['#4f46e5', '#7c3aed', '#a855f7', '#6366f1', '#f59e0b', '#10b981', '#ec4899'];
+            for (let i = 0; i < count; i++) {
+                const el = document.createElement('div');
+                el.className = 'confetti-piece';
+                el.style.left              = Math.random() * 100 + 'vw';
+                el.style.top               = '-12px';
+                el.style.background        = colors[Math.floor(Math.random() * colors.length)];
+                el.style.animationDuration = (0.9 + Math.random() * 1.4) + 's';
+                el.style.animationDelay    = Math.random() * 0.35 + 's';
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 2600);
+            }
+        }
+
+        // =====================================================
+        // ── REACTION TIME PANEL ──
+        // =====================================================
+        function renderReactionBreakdown() {
+            if (reactionTimes.length < 2) { rtSection.style.display = 'none'; return; }
+
+            const avg  = Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length);
+            const best = Math.round(Math.min(...reactionTimes));
+            const tps  = (score / GAME_DURATION).toFixed(1);
+
+            document.getElementById('rt-avg').textContent  = avg  + ' ms';
+            document.getElementById('rt-best').textContent = best + ' ms';
+            document.getElementById('rt-tps').textContent  = tps;
+
+            const buckets = [
+                { label: '< 100 ms',   min: 0,   max: 100,      color: '#22c55e' },
+                { label: '100–200 ms', min: 100,  max: 200,      color: '#6366f1' },
+                { label: '200–300 ms', min: 200,  max: 300,      color: '#f59e0b' },
+                { label: '300 ms +',   min: 300,  max: Infinity, color: '#ef4444' },
+            ];
+
+            const counts   = buckets.map(b => reactionTimes.filter(t => t >= b.min && t < b.max).length);
+            const maxCount = Math.max(...counts, 1);
+
+            const barsEl = document.getElementById('rt-bars');
+            barsEl.innerHTML = '';
+            buckets.forEach((b, i) => {
+                const pct      = Math.round((counts[i] / reactionTimes.length) * 100);
+                const barWidth = Math.round((counts[i] / maxCount) * 100);
+                const row      = document.createElement('div');
+                row.className  = 'rt-bar-row';
+                row.innerHTML  = `
+                    <span class="rt-bar-label">${b.label}</span>
+                    <div class="rt-bar-bg">
+                        <div class="rt-bar-fg" style="width:${barWidth}%;background:${b.color}"></div>
+                    </div>
+                    <span class="rt-bar-pct">${pct}%</span>
+                `;
+                barsEl.appendChild(row);
+            });
+
+            rtSection.style.display = 'block';
+        }
+
+        // =====================================================
+        // ── EXISTING HELPERS (unchanged) ──
+        // =====================================================
+        function getTodayKey() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        function getLocalTodayScores() {
+            const all = JSON.parse(localStorage.getItem('nodeHeadScores') || '[]');
+            return all.filter(e => e.date === getTodayKey());
+        }
+
+        function addScoreToLocalStorage(nickname, scoreValue) {
+            const all = JSON.parse(localStorage.getItem('nodeHeadScores') || '[]');
+            all.push({ nickname, score: scoreValue, date: getTodayKey(), timestamp: Date.now() });
+            if (all.length > 200) all.splice(0, all.length - 200);
+            localStorage.setItem('nodeHeadScores', JSON.stringify(all));
+        }
+
+        function seedLocalStorage() {
+            const today   = getTodayKey();
+            const samples = [
+                { nickname: 'NodeMaster',   score: 42, date: today },
+                { nickname: 'TapKing',       score: 37, date: today },
+                { nickname: 'CryptoFan',     score: 28, date: today },
+                { nickname: 'BlockchainBen', score: 31, date: today },
+                { nickname: 'Satoshi',       score: 45, date: today },
+            ];
+            localStorage.setItem('nodeHeadScores', JSON.stringify(samples));
+        }
+
+        if (!localStorage.getItem('nodeHeadScores')) seedLocalStorage();
+
+        function deduplicateScores(scores) {
+            const best = new Map();
+            scores.forEach(e => {
+                if (!best.has(e.nickname) || e.score > best.get(e.nickname)) best.set(e.nickname, e.score);
+            });
+            return Array.from(best.entries())
+                .map(([nickname, score]) => ({ nickname, score }))
+                .sort((a, b) => b.score - a.score);
+        }
+
+        function fetchLeaderboard() {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                return Promise.resolve(deduplicateScores(getLocalTodayScores()));
+            }
+            return new Promise(resolve => {
+                const callbackName = 'leaderboardCallback_' + Date.now();
+                const script       = document.createElement('script');
+                let settled        = false;
+
+                const timer = setTimeout(() => {
+                    if (settled) return; settled = true; cleanup();
+                    resolve(deduplicateScores(getLocalTodayScores()));
+                }, 5000);
+
+                function cleanup() {
+                    clearTimeout(timer);
+                    delete window[callbackName];
+                    if (script.parentNode) script.parentNode.removeChild(script);
+                }
+
+                window[callbackName] = function (data) {
+                    if (settled) return; settled = true; cleanup();
+                    if (Array.isArray(data) && data.length) resolve(deduplicateScores(data));
+                    else resolve(deduplicateScores(getLocalTodayScores()));
+                };
+
+                script.onerror = function () {
+                    if (settled) return; settled = true; cleanup();
+                    resolve(deduplicateScores(getLocalTodayScores()));
+                };
+
+                script.src = `${GOOGLE_SCRIPT_URL}?action=getToday&callback=${callbackName}&t=${Date.now()}`;
+                document.head.appendChild(script);
+            });
+        }
+
+        async function renderLeaderboard() {
+            leaderboardEntries.innerHTML = '<p class="text-gray-500 italic">Loading...</p>';
+            const scores = await fetchLeaderboard();
+            if (!scores.length) { leaderboardEntries.innerHTML = '<p class="text-gray-500 italic">No scores yet today.</p>'; return; }
+            let html = '<ol class="list-decimal list-inside space-y-1">';
+            scores.slice(0, 10).forEach((e, i) => {
+                html += `<li class="${i === 0 ? 'font-bold text-indigo-800' : ''}">${e.nickname} — ${e.score}</li>`;
+            });
+            html += '</ol>';
+            if (scores.length > 10) html += `<p class="text-xs text-gray-500 mt-1">and ${scores.length - 10} more...</p>`;
+            leaderboardEntries.innerHTML = html;
+        }
+
+        async function saveScoreToSheet(nickname, scoreValue) {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                addScoreToLocalStorage(nickname, scoreValue); return;
+            }
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST', mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nickname, score: scoreValue, timestamp: new Date().toISOString() })
+                });
+            } catch { addScoreToLocalStorage(nickname, scoreValue); }
+        }
+
+        function handleShare() {
+            if (!playerNickname) return;
+            const text = `I'm ${playerNickname} and I scored ${score} points in the Node Head game! Can you beat me? @nodexxplorer`;
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        // =====================================================
+        // ── GAME LOGIC ──
+        // =====================================================
+        function updateTimer() {
+            timeLeft -= 0.1;
+            if (timeLeft <= 0) {
+                timeLeft = 0;
+                clearInterval(gameInterval);
+                timerDisplay.textContent     = '0.0';
+                timerBarFill.style.transform = 'scaleX(0)';
+                timerBarFill.classList.remove('urgent');
+                endGame();
+                return;
+            }
+
+            timerDisplay.textContent     = timeLeft.toFixed(1);
+            timerBarFill.style.transform = `scaleX(${timeLeft / GAME_DURATION})`;
+
+            // Escalating audio + visual urgency in final 3 seconds
+            if (timeLeft <= 3) {
+                timerDisplay.classList.add('text-red-600');
+                timerDisplay.classList.remove('text-purple-600');
+                timerBarFill.classList.add('urgent');
+                playUrgentTick(timeLeft);   // fires every ~100 ms, pitch escalates
+            }
+        }
+
+        function startGame() {
+            if (gameState === 'PLAYING') return;
+            gameState = 'PLAYING';
+
+            score          = 0;
+            timeLeft       = GAME_DURATION;
+            lastTapTime    = null;
+            reactionTimes  = [];
+            triggeredMilestones.clear();
+
+            scoreDisplay.textContent     = '0';
+            timerDisplay.textContent     = timeLeft.toFixed(1);
+            timerDisplay.classList.remove('text-red-600');
+            timerDisplay.classList.add('text-purple-600');
+            timerBarFill.style.transform = 'scaleX(1)';
+            timerBarFill.classList.remove('urgent');
+
+            startOverlay.classList.add('opacity-0', 'pointer-events-none');
+            startOverlay.classList.remove('z-20');
+            shareSection.classList.add('hidden');
+            rtSection.style.display = 'none';
+            leaderboardPanel.classList.add('hidden');
+            toggleLeaderboardBtn.textContent = '🏆 Show Global Leaderboard';
+            startButton.textContent  = 'Game In Progress...';
+            startButton.disabled     = true;
+
+            gameInterval = setInterval(updateTimer, 100);
+            nokTarget.addEventListener('click',      handleTap);
+            nokTarget.addEventListener('touchstart', handleTap);
+        }
+
+        async function endGame() {
+            gameState = 'FINISHED';
+            nokTarget.removeEventListener('click',      handleTap);
+            nokTarget.removeEventListener('touchstart', handleTap);
+            clearInterval(gameInterval);
+
+            playEndFanfare();
+
+            await saveScoreToSheet(playerNickname, score);
+            if (!leaderboardPanel.classList.contains('hidden')) await renderLeaderboard();
+
+            startButton.textContent = 'Play Again';
+            startButton.disabled    = false;
+
+            startOverlay.classList.remove('opacity-0', 'pointer-events-none');
+            startOverlay.classList.add('z-20');
+            startOverlay.querySelector('p').textContent = `Game Over! Score: ${score}`;
+
+            finalScoreDisplay.textContent = score;
+            shareSection.classList.remove('hidden');
+            showMessage("Time's Up!", true);
+
+            renderReactionBreakdown();
+
+            scoreDisplay.classList.add('pulse-score');
+            setTimeout(() => scoreDisplay.classList.remove('pulse-score'), 1000);
+        }
+
+        function handleTap(event) {
+            event.preventDefault();
+            if (gameState !== 'PLAYING') return;
+
+            // Track inter-tap reaction time
+            const now = performance.now();
+            if (lastTapTime !== null) reactionTimes.push(now - lastTapTime);
+            lastTapTime = now;
+
+            score++;
+            scoreDisplay.textContent = score;
+
+            nokTarget.style.transform = 'scale(0.9)';
+            setTimeout(() => { nokTarget.style.transform = 'scale(1)'; }, 50);
+
+            // Check milestones
+            if (MILESTONES.includes(score) && !triggeredMilestones.has(score)) {
+                triggeredMilestones.add(score);
+                triggerMilestone(score);
+            }
+        }
+
+        function showMessage(text, isError = false) {
+            messageBox.textContent = text;
+            messageBox.classList.remove('hidden', 'bg-red-600', 'bg-green-600');
+            messageBox.classList.add(isError ? 'bg-red-600' : 'bg-green-600');
+            setTimeout(() => messageBox.classList.add('hidden'), 1500);
+        }
+
+        function showGameScreen() {
+            nicknameScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            playerNicknameDisplay.textContent = playerNickname;
+            renderLeaderboard();
+        }
+
+        function showNicknameScreen() {
+            gameScreen.classList.add('hidden');
+            nicknameScreen.classList.remove('hidden');
+            nicknameInput.value = playerNickname;
+            nicknameInput.focus();
+        }
+
+        // ===== EVENT LISTENERS =====
+        nicknameSubmit.addEventListener('click', () => {
+            const n = nicknameInput.value.trim();
+            if (n.length < 2) { alert('Please enter a nickname with at least 2 characters'); return; }
+            playerNickname = n;
+            showGameScreen();
+        });
+
+        nicknameInput.addEventListener('keypress', e => { if (e.key === 'Enter') nicknameSubmit.click(); });
+        startButton.addEventListener('click', () => { if (gameState === 'IDLE' || gameState === 'FINISHED') startGame(); });
+        shareButton.addEventListener('click', handleShare);
+        changeNicknameBtn.addEventListener('click', showNicknameScreen);
+
+        toggleLeaderboardBtn.addEventListener('click', async () => {
+            if (leaderboardPanel.classList.contains('hidden')) {
+                await renderLeaderboard();
+                leaderboardPanel.classList.remove('hidden');
+                toggleLeaderboardBtn.textContent = '🏆 Hide Leaderboard';
+            } else {
+                leaderboardPanel.classList.add('hidden');
+                toggleLeaderboardBtn.textContent = '🏆 Show Global Leaderboard';
+            }
+        });
+
+        // Initial setup
+        startButton.textContent = 'Start Game';
+        startOverlay.classList.remove('opacity-0', 'pointer-events-none');
+        startOverlay.classList.add('z-20');
+    </script>
+</body>
+</html>
             <button id="nickname-submit"
                 class="primary-button w-full py-4 text-xl font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white uppercase tracking-wider">
                 Continue to Game
