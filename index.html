@@ -569,7 +569,7 @@
         }
 
         // =====================================================
-        // ── EXISTING HELPERS (unchanged) ──
+        // ── EXISTING HELPERS
         // =====================================================
         function getTodayKey() {
             const d = new Date();
@@ -676,7 +676,7 @@
 
         function handleShare() {
             if (!playerNickname) return;
-            const text = `I'm ${playerNickname} and I scored ${score} points in the Node Head game! Can you beat me? @nodexxplorer`;
+            const text = `I'm ${playerNickname} and I scored ${score} points in the Node Head game! Can you beat me? @nodexxplorer @AWSUniuyo`;
             window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
         }
 
